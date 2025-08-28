@@ -8,9 +8,13 @@ import {
   Bell, 
   Menu,
   Wifi,
-  WifiOff
+  WifiOff,
+  LogOut,
+  Shield
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useTradingStore } from '../store/tradingStore';
+import { useAuthStore } from '../store/authStore';
 
 interface HeaderProps {
   isConnected: boolean;
@@ -18,6 +22,12 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ isConnected }) => {
   const { balance } = useTradingStore();
+  const { user, logout } = useAuthStore();
+
+  const handleLogout = () => {
+    logout();
+    // Navigation will be handled by the route protection
+  };
 
   return (
     <nav className="bg-dark border-bottom border-dark sticky-top">
@@ -41,6 +51,14 @@ const Header: React.FC<HeaderProps> = ({ isConnected }) => {
                 </>
               )}
             </div>
+
+            {/* Deriv Connection Status */}
+            {user?.isDerivConnected && (
+              <div className="d-flex align-items-center gap-1">
+                <Shield size={16} className="text-teal" />
+                <span className="text-teal small d-none d-lg-inline">Deriv Connected</span>
+              </div>
+            )}
           </div>
 
           {/* Navigation Items */}
@@ -65,9 +83,9 @@ const Header: React.FC<HeaderProps> = ({ isConnected }) => {
               Support
             </button>
             
-            <button className="btn btn-outline-light btn-sm">
+            <Link to="/deriv-auth" className="btn btn-outline-light btn-sm">
               <Settings size={16} />
-            </button>
+            </Link>
             
             <button className="btn btn-outline-light btn-sm">
               <Bell size={16} />
@@ -81,9 +99,16 @@ const Header: React.FC<HeaderProps> = ({ isConnected }) => {
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
               >
-                Real account ${balance.toFixed(0)}
+                {user?.name} ${balance.toFixed(0)}
               </button>
-              <ul className="dropdown-menu bg-card border-dark">
+              <ul className="dropdown-menu dropdown-menu-end bg-card border-dark">
+                <li>
+                  <div className="dropdown-item-text text-white">
+                    <div className="fw-medium">{user?.name}</div>
+                    <div className="small text-gray">{user?.email}</div>
+                  </div>
+                </li>
+                <li><hr className="dropdown-divider border-dark" /></li>
                 <li>
                   <a className="dropdown-item text-white" href="#">
                     Real account ${balance.toFixed(2)}
@@ -94,14 +119,61 @@ const Header: React.FC<HeaderProps> = ({ isConnected }) => {
                     Demo account $10,000
                   </a>
                 </li>
+                <li><hr className="dropdown-divider border-dark" /></li>
+                <li>
+                  <Link to="/deriv-auth" className="dropdown-item text-white d-flex align-items-center gap-2">
+                    <Shield size={16} />
+                    {user?.isDerivConnected ? 'Manage Deriv Connection' : 'Connect Deriv Account'}
+                  </Link>
+                </li>
+                <li>
+                  <button 
+                    className="dropdown-item text-danger d-flex align-items-center gap-2"
+                    onClick={handleLogout}
+                  >
+                    <LogOut size={16} />
+                    Sign Out
+                  </button>
+                </li>
               </ul>
             </div>
           </div>
 
           {/* Mobile Menu */}
-          <button className="btn btn-outline-light d-lg-none">
-            <Menu size={20} />
-          </button>
+          <div className="dropdown d-lg-none">
+            <button 
+              className="btn btn-outline-light dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
+              <Menu size={20} />
+            </button>
+            <ul className="dropdown-menu dropdown-menu-end bg-card border-dark">
+              <li>
+                <div className="dropdown-item-text text-white">
+                  <div className="fw-medium">{user?.name}</div>
+                  <div className="small text-gray">${balance.toFixed(2)}</div>
+                </div>
+              </li>
+              <li><hr className="dropdown-divider border-dark" /></li>
+              <li>
+                <Link to="/deriv-auth" className="dropdown-item text-white">
+                  <Shield size={16} className="me-2" />
+                  Deriv Settings
+                </Link>
+              </li>
+              <li>
+                <button 
+                  className="dropdown-item text-danger"
+                  onClick={handleLogout}
+                >
+                  <LogOut size={16} className="me-2" />
+                  Sign Out
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </nav>
