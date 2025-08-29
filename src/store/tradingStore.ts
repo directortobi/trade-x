@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { TradingState, Trade, LogItem, Tick } from '../types';
+import { TradingState, Trade, LogItem, Tick, TradeType } from '../types';
 
 interface TradingStore extends TradingState {
   updateSettings: (settings: Partial<TradingState['settings']>) => void;
@@ -10,7 +10,7 @@ interface TradingStore extends TradingState {
   addTrade: (trade: Trade) => void;
   addLog: (log: LogItem) => void;
   updateBalance: (amount: number) => void;
-  executeTrade: (side: 'Rise' | 'Fall', amount: number, multiplier: number, duration: { value: number; unit: 'Ticks' }) => void;
+  executeTrade: (side: TradeType, amount: number, multiplier: number, duration: { value: number; unit: 'Ticks' }) => void;
   resolveTrade: (tradeId: string) => void;
 }
 
@@ -25,12 +25,13 @@ const initialState: TradingState = {
   trades: [],
   logs: [],
   settings: {
-    marketId: 'volatility-100',
+    marketId: 'R_100', // Default to Volatility 100 Index symbol
     strategy: 'NeuroBot',
     mode: 'Faster',
     amount: 1,
     targetProfit: 20,
-    stopLoss: 1000
+    stopLoss: 1000,
+    riskManagement: 'Conservative'
   }
 };
 
@@ -107,7 +108,7 @@ export const useTradingStore = create<TradingStore>()(
           duration,
           entryTime: Date.now(),
           entryPrice: state.currentPrice,
-          payoutPct: 0.88,
+          payoutPct: 0.88, // Note: This should be dynamic from API
           status: 'open'
         };
         
@@ -125,10 +126,17 @@ export const useTradingStore = create<TradingStore>()(
 
         if (!trade || trade.status !== 'open') return;
 
+        // Simple resolution for CALL/PUT
         const finalPrice = state.currentPrice;
-        const won = (trade.side === 'Rise' && finalPrice > trade.entryPrice) || 
-                   (trade.side === 'Fall' && finalPrice < trade.entryPrice);
+        const won = (trade.side === 'CALL' && finalPrice > trade.entryPrice) || 
+                   (trade.side === 'PUT' && finalPrice < trade.entryPrice);
         
+        // TODO: Add logic for RESET_CALL and RESET_PUT
+        if (trade.side === 'RESET_CALL' || trade.side === 'RESET_PUT') {
+          // Placeholder logic for now
+          console.log(`Resolving RESET trade: ${trade.id}`);
+        }
+
         const pnl = won ? trade.amount * trade.payoutPct : -trade.amount;
         
         const updatedTrade: Trade = {

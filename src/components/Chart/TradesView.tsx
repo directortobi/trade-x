@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
 import { useTradingStore } from '../../store/tradingStore';
 
 const TradesView: React.FC = () => {
@@ -17,6 +17,20 @@ const TradesView: React.FC = () => {
         return <span className="badge bg-secondary">Pending</span>;
       default:
         return <span className="badge bg-secondary">{status}</span>;
+    }
+  };
+
+  const getSideIcon = (side: string) => {
+    switch(side) {
+      case 'CALL':
+        return <TrendingUp size={16} className="text-success" />;
+      case 'PUT':
+        return <TrendingDown size={16} className="text-danger" />;
+      case 'RESET_CALL':
+      case 'RESET_PUT':
+        return <RefreshCw size={16} className="text-info" />;
+      default:
+        return null;
     }
   };
 
@@ -55,12 +69,8 @@ const TradesView: React.FC = () => {
                   </td>
                   <td>
                     <div className="d-flex align-items-center gap-1">
-                      {trade.side === 'Rise' ? (
-                        <TrendingUp size={16} className="text-success" />
-                      ) : (
-                        <TrendingDown size={16} className="text-danger" />
-                      )}
-                      <span className="text-white">{trade.side}</span>
+                      {getSideIcon(trade.side)}
+                      <span className="text-white">{trade.side.replace('_', ' ')}</span>
                     </div>
                   </td>
                   <td className="text-white">${trade.amount}</td>

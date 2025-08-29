@@ -1,7 +1,7 @@
 import React from 'react';
 import { Play, Square, Shield, ChevronRight, TrendingUp } from 'lucide-react';
 import { useTradingStore } from '../store/tradingStore';
-import { markets, getMarketById } from '../data/markets';
+import { marketGroups, getMarketBySymbol } from '../data/markets';
 
 const RobotSettingsPanel: React.FC = () => {
   const { 
@@ -14,7 +14,7 @@ const RobotSettingsPanel: React.FC = () => {
     stopRobot 
   } = useTradingStore();
 
-  const selectedMarket = getMarketById(settings.marketId);
+  const selectedMarket = getMarketBySymbol(settings.marketId);
 
   const handleStartStop = () => {
     if (isRobotRunning) {
@@ -44,10 +44,14 @@ const RobotSettingsPanel: React.FC = () => {
           value={settings.marketId}
           onChange={(e) => updateSettings({ marketId: e.target.value })}
         >
-          {markets.map(market => (
-            <option key={market.id} value={market.id}>
-              {market.name}
-            </option>
+          {marketGroups.map(group => (
+            <optgroup key={group.name} label={group.name}>
+              {group.markets.map(market => (
+                <option key={market.id} value={market.id}>
+                  {market.name}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
         {selectedMarket?.tooltip && (
@@ -60,17 +64,15 @@ const RobotSettingsPanel: React.FC = () => {
       {/* Strategy */}
       <div className="mb-3">
         <label className="form-label text-gray small">Strategy</label>
-        <div className="card p-3">
-          <div className="d-flex align-items-center">
-            <div className="bg-teal rounded p-2 me-3">
-              <TrendingUp size={20} className="text-white" />
-            </div>
-            <div className="flex-grow-1">
-              <div className="text-white fw-medium">NeuroBot</div>
-            </div>
-            <ChevronRight size={16} className="text-gray" />
-          </div>
-        </div>
+        <select 
+          className="form-select"
+          value={settings.strategy}
+          onChange={(e) => updateSettings({ strategy: e.target.value as any })}
+        >
+          <option value="NeuroBot">NeuroBot</option>
+          <option value="TrendBot">TrendBot</option>
+          <option value="MeanReversionBot">MeanReversionBot</option>
+        </select>
       </div>
 
       {/* Trading Mode */}
@@ -138,19 +140,15 @@ const RobotSettingsPanel: React.FC = () => {
       {/* Risk Management */}
       <div className="mb-4">
         <label className="form-label text-gray small">Risk Management</label>
-        <div className="card p-3">
-          <div className="d-flex align-items-center">
-            <div className="bg-success rounded p-2 me-3">
-              <Shield size={20} className="text-white" />
-            </div>
-            <div className="flex-grow-1">
-              <div className="text-white fw-medium">Conservative</div>
-              <div className="text-success small">▲ Low risk</div>
-              <div className="text-gray small">Recommended balance: at least $50</div>
-            </div>
-            <ChevronRight size={16} className="text-gray" />
-          </div>
-        </div>
+        <select 
+          className="form-select"
+          value={settings.riskManagement}
+          onChange={(e) => updateSettings({ riskManagement: e.target.value as any })}
+        >
+          <option value="Conservative">Conservative - Low risk</option>
+          <option value="Moderate">Moderate - Balanced</option>
+          <option value="Aggressive">Aggressive - High risk</option>
+        </select>
       </div>
 
       {/* Start/Stop Button */}

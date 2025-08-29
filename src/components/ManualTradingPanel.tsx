@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { TrendingUp, TrendingDown, Minus, Plus, HelpCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Plus, HelpCircle, RefreshCw } from 'lucide-react';
 import { useTradingStore } from '../store/tradingStore';
-import { markets, getMarketById } from '../data/markets';
+import { marketGroups, getMarketBySymbol } from '../data/markets';
+import { TradeType } from '../types';
 
 const ManualTradingPanel: React.FC = () => {
-  const [tradeType, setTradeType] = useState<'Rise' | 'Fall'>('Rise');
   const [duration, setDuration] = useState(1);
   const [amount, setAmount] = useState(1);
   const [multiplier, setMultiplier] = useState(1);
@@ -18,11 +18,11 @@ const ManualTradingPanel: React.FC = () => {
     updateSettings 
   } = useTradingStore();
 
-  const selectedMarket = getMarketById(settings.marketId);
-  const payoutPct = 88.00;
+  const selectedMarket = getMarketBySymbol(settings.marketId);
+  const payoutPct = 88.00; // This should be dynamic from API
   const payoutAmount = amount * (payoutPct / 100);
 
-  const handleTrade = (side: 'Rise' | 'Fall') => {
+  const handleTrade = (side: TradeType) => {
     if (amount <= 0 || amount > balance) return;
     
     executeTrade(side, amount, multiplier, { value: duration, unit: 'Ticks' });
@@ -82,10 +82,14 @@ const ManualTradingPanel: React.FC = () => {
           value={settings.marketId}
           onChange={(e) => updateSettings({ marketId: e.target.value })}
         >
-          {markets.map(market => (
-            <option key={market.id} value={market.id}>
-              {market.name}
-            </option>
+          {marketGroups.map(group => (
+            <optgroup key={group.name} label={group.name}>
+              {group.markets.map(market => (
+                <option key={market.id} value={market.id}>
+                  {market.name}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </div>
@@ -96,21 +100,6 @@ const ManualTradingPanel: React.FC = () => {
           <div className="text-teal fw-bold h5 mb-0">
             {currentPrice.toFixed(4)}
           </div>
-        </div>
-      </div>
-
-      {/* Trade Type */}
-      <div className="mb-3">
-        <label className="form-label text-gray small">Trade Type</label>
-        <div className="btn-group w-100" role="group">
-          <button
-            type="button"
-            className={`btn ${tradeType === 'Rise' ? 'btn-rise' : 'btn-outline-success'}`}
-            onClick={() => setTradeType('Rise')}
-          >
-            <TrendingUp size={16} className="me-1" />
-            Rise/Fall
-          </button>
         </div>
       </div>
 
@@ -163,34 +152,46 @@ const ManualTradingPanel: React.FC = () => {
       <div className="row g-2">
         <div className="col-6">
           <button
-            className="btn btn-rise w-100 py-3"
-            onClick={() => handleTrade('Rise')}
+            className="btn btn-rise w-100 py-3 d-flex flex-column align-items-center"
+            onClick={() => handleTrade('CALL')}
             disabled={amount <= 0 || amount > balance}
           >
-            <div className="d-flex align-items-center justify-content-center gap-2">
-              <TrendingUp size={20} />
-              <div>
-                <div className="fw-bold">Rise</div>
-                <div className="small">{payoutPct.toFixed(2)}%</div>
-                <div className="small">{payoutAmount.toFixed(2)} USD</div>
-              </div>
-            </div>
+            <TrendingUp size={20} />
+            <span className="fw-bold">CALL</span>
+            <small>Payout: ${payoutAmount.toFixed(2)}</small>
           </button>
         </div>
         <div className="col-6">
           <button
-            className="btn btn-fall w-100 py-3"
-            onClick={() => handleTrade('Fall')}
+            className="btn btn-fall w-100 py-3 d-flex flex-column align-items-center"
+            onClick={() => handleTrade('PUT')}
             disabled={amount <= 0 || amount > balance}
           >
-            <div className="d-flex align-items-center justify-content-center gap-2">
-              <TrendingDown size={20} />
-              <div>
-                <div className="fw-bold">Fall</div>
-                <div className="small">{payoutPct.toFixed(2)}%</div>
-                <div className="small">{payoutAmount.toFixed(2)} USD</div>
-              </div>
-            </div>
+            <TrendingDown size={20} />
+            <span className="fw-bold">PUT</span>
+            <small>Payout: ${payoutAmount.toFixed(2)}</small>
+          </button>
+        </div>
+        <div className="col-6">
+          <button
+            className="btn btn-outline-success w-100 py-3 d-flex flex-column align-items-center"
+            onClick={() => handleTrade('RESET_CALL')}
+            disabled={amount <= 0 || amount > balance}
+          >
+            <RefreshCw size={20} />
+            <span className="fw-bold">RESET CALL</span>
+            <small>Reset trade</small>
+          </button>
+        </div>
+        <div className="col-6">
+          <button
+            className="btn btn-outline-danger w-100 py-3 d-flex flex-column align-items-center"
+            onClick={() => handleTrade('RESET_PUT')}
+            disabled={amount <= 0 || amount > balance}
+          >
+            <RefreshCw size={20} />
+            <span className="fw-bold">RESET PUT</span>
+            <small>Reset trade</small>
           </button>
         </div>
       </div>

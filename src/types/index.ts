@@ -1,16 +1,18 @@
 export interface Market {
-  id: string;
+  id: string; // This is the Deriv symbol, e.g., 'R_100'
   name: string;
+  group: 'Synthetics' | 'Forex' | 'Crypto' | 'Commodities' | 'Indices';
   tooltip?: string;
 }
 
 export interface Settings {
-  marketId: string;
-  strategy: 'NeuroBot';
+  marketId: string; // This will store the Deriv symbol (market.id)
+  strategy: 'NeuroBot' | 'TrendBot' | 'MeanReversionBot';
   mode: 'Faster' | 'Balanced' | 'Safer';
   amount: number;
   targetProfit: number;
   stopLoss: number;
+  riskManagement: 'Conservative' | 'Moderate' | 'Aggressive';
 }
 
 export interface Tick {
@@ -18,14 +20,17 @@ export interface Tick {
   price: number;
 }
 
+export type TradeType = 'CALL' | 'PUT' | 'RESET_CALL' | 'RESET_PUT';
+
 export interface Trade {
   id: string;
-  side: 'Rise' | 'Fall';
+  side: TradeType;
   amount: number;
   multiplier: number;
   duration: { value: number; unit: 'Ticks' | 'Seconds' | 'Minutes' };
   entryTime: number;
   exitTime?: number;
+  resetTime?: number; // For RESET trades
   entryPrice: number;
   exitPrice?: number;
   payoutPct: number;
